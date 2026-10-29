@@ -1,0 +1,11 @@
+data/
+.venv/
+__pycache__/
+*.pyc
+output/
+*.tar.gz
+.playwright-cli/
+test-results/
+
+# Local BGM tracks (copyrighted, not redistributed)
+static/game-assets/bgm/*.mp3

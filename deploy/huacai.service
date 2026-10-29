@@ -1,0 +1,38 @@
+[Unit]
+Description=Huacai shared word banks
+After=network.target
+
+[Service]
+Type=simple
+User=huacai
+Group=huacai
+WorkingDirectory=/opt/huacai/current
+Environment=HUACAI_DB=/var/lib/huacai/huacai.sqlite3
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/huacai/venv/bin/python -m gunicorn --bind 0.0.0.0:80 --workers 2 --threads 4 --timeout 30 --worker-tmp-dir /run/huacai --access-logfile - --error-logfile - wsgi:application
+Restart=on-failure
+RestartSec=3
+RuntimeDirectory=huacai
+StateDirectory=huacai
+UMask=0027
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/huacai /run/huacai
+MemoryMax=192M
+CPUQuota=50%
+TasksMax=48
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200
+
+[Install]
+WantedBy=multi-user.target

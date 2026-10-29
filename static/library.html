@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>画猜作品库</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/game.css">
+  <link rel="stylesheet" href="/library.css">
+</head>
+<body class="library-page">
+  <header class="library-header">
+    <a class="library-brand" href="/game"><span class="brand-mark" aria-hidden="true">🎨</span><span><strong>画猜作品库</strong><small>GALLERY · REPLAYS</small></span></a>
+    <div class="library-account"><span id="library-account"></span><a class="button button-small button-cream" href="/game">返回游戏</a></div>
+  </header>
+
+  <main class="library-shell">
+    <section id="library-login" class="library-login card" hidden>
+      <h1>请先登录</h1>
+      <p>画廊和回放库需要账号。登录后可收藏画作、继续创作和查看每局接龙。</p>
+      <a class="button button-primary" href="/game">去游戏页登录</a>
+    </section>
+
+    <section id="library-content" hidden>
+      <div class="library-tabs" role="tablist" aria-label="作品库分类">
+        <button type="button" class="library-tab active" data-tab="gallery" role="tab" aria-selected="true">我的画廊</button>
+        <button type="button" class="library-tab" data-tab="replays" role="tab" aria-selected="false">回放库</button>
+      </div>
+
+      <section id="gallery-view" class="library-view">
+        <div class="library-head"><div><h1>我的画廊</h1><p>从回放库收藏的画作，也可以新建或继续创作。</p></div><button id="new-artwork" class="button button-primary" type="button">新建画作</button></div>
+        <div id="gallery-grid" class="gallery-grid"></div>
+        <p id="gallery-empty" class="library-empty" hidden>画廊还是空的。去回放库收藏一幅画，或新建画作。</p>
+      </section>
+
+      <section id="replays-view" class="library-view" hidden>
+        <div class="library-head"><div><h1>回放库</h1><p>每局接龙结束后自动保存。可以查看完整过程，也可以模拟观战。</p></div><button id="refresh-replays" class="button button-cream" type="button">刷新</button></div>
+        <div id="replay-grid" class="replay-grid"></div>
+        <p id="replay-empty" class="library-empty" hidden>还没有回放。完成一局接龙后会自动出现在这里。</p>
+      </section>
+    </section>
+  </main>
+
+  <section id="studio" class="studio" hidden>
+    <header class="studio-head"><div><strong id="studio-title-label">新建画作</strong><span id="studio-status" class="small-muted">可直接开始画</span></div><div class="studio-actions"><button id="studio-undo" class="button button-small button-cream" type="button">撤销</button><button id="studio-clear" class="button button-small button-cream" type="button">清空</button><button id="studio-save" class="button button-small button-primary" type="button">保存到画廊</button><button id="studio-close" class="button button-small button-cream" type="button">返回</button></div></header>
+    <div class="studio-body">
+      <div class="studio-paper"><canvas id="studio-canvas" width="960" height="640" aria-label="画廊画布"></canvas></div>
+      <aside class="studio-tools">
+        <label class="field-label" for="studio-name">标题</label><input id="studio-name" class="text-input" maxlength="80" placeholder="未命名画作">
+        <div class="studio-group"><span class="field-label">工具</span><div class="studio-tool-row"><button class="studio-tool active" data-studio-tool="pen" type="button">画笔</button><button class="studio-tool" data-studio-tool="eraser" type="button">橡皮</button><button class="studio-tool" data-studio-tool="line-eraser" type="button">线擦</button><button class="studio-tool" data-studio-tool="fill" type="button">填充</button></div></div>
+        <div class="studio-group"><label class="field-label" for="studio-size">粗细 <output id="studio-size-value">6</output></label><input id="studio-size" type="range" min="1" max="64" value="6"></div>
+        <div class="studio-group"><span class="field-label">颜色</span><div id="studio-colors" class="studio-colors"></div><label class="studio-custom">自定义 <input id="studio-color" type="color" value="#293047"></label></div>
+        <div class="studio-group"><label class="field-label" for="studio-opacity">不透明度 <output id="studio-opacity-value">100</output>%</label><input id="studio-opacity" type="range" min="10" max="100" value="100"></div>
+        <div class="studio-group"><span class="field-label">笔触</span><div id="studio-brushes" class="studio-brushes"></div></div>
+        <div class="studio-group"><span class="field-label">渐变颜色</span><div class="studio-gradient"><input id="studio-gradient-a" type="color" value="#ff6b6b"><input id="studio-gradient-b" type="color" value="#4d7cff"><button id="studio-gradient-toggle" class="button button-small button-cream" type="button" aria-pressed="false">启用渐变</button></div></div>
+        <div class="studio-group"><span class="field-label">图层</span><div id="studio-layers" class="studio-layers"></div></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="replay-detail" class="replay-detail" hidden>
+    <header class="studio-head"><div><strong id="replay-title">回放详情</strong><span id="replay-meta" class="small-muted"></span></div><div class="studio-actions"><button id="start-spectate" class="button button-small button-primary" type="button">模拟观战</button><button id="close-replay" class="button button-small button-cream" type="button">返回</button></div></header>
+    <div id="replay-chains" class="replay-chains"></div>
+  </section>
+
+  <section id="spectate" class="spectate" hidden>
+    <header class="spectate-head"><div><strong id="spectate-title">模拟观战</strong><span id="spectate-step" class="small-muted"></span></div><div class="studio-actions"><button id="spectate-toggle" class="button button-small button-cream" type="button">暂停</button><button id="spectate-close" class="button button-small button-cream" type="button">退出观战</button></div></header>
+    <div class="spectate-stage"><div class="spectate-paper"><canvas id="spectate-canvas" width="960" height="640"></canvas><div id="spectate-caption" class="spectate-caption"></div><div id="spectate-speech" class="spectate-speech" hidden></div></div></div>
+  </section>
+
+  <div id="library-toast" class="library-toast" role="status" hidden></div>
+  <script src="/library.js" defer></script>
+</body>
+</html>

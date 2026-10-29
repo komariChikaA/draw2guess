@@ -1,0 +1,17 @@
+[Unit]
+Description=Huacai daily SQLite backup
+After=huacai.service
+
+[Service]
+Type=oneshot
+User=huacai
+Group=huacai
+ExecStart=/opt/huacai/venv/bin/python /opt/huacai/current/deploy/backup.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/huacai
+MemoryMax=64M
+CPUQuota=20%
+UMask=0027

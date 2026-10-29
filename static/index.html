@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="查看你画我猜题库，选择题库并添加词条。">
+  <title>你画我猜题库</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳转到主要内容</a>
+  <header class="site-header"><div class="header-inner"><a class="brand" href="#/">你画我猜题库</a><nav class="header-actions" aria-label="主要导航"><a class="button" href="/game">画猜接龙</a><button class="button button-primary" id="open-create">新建题库</button></nav></div></header>
+  <main id="main" class="container" tabindex="-1">
+    <section id="overview-view" aria-labelledby="libraries-title">
+      <div class="section-heading"><h1 id="libraries-title">全部题库 <span id="library-count" class="count" hidden></span></h1><label class="search-field"><span class="sr-only">搜索题库</span><input id="library-search" type="search" placeholder="搜索题库" autocomplete="off"></label></div>
+      <p class="summary" id="collection-summary" aria-live="polite"></p>
+      <div id="library-grid" class="library-list" aria-live="polite" aria-busy="true"></div>
+      <p class="page-note">题库公开共享，无需登录。任何人都可以添加词条；只能删除自己在这台设备上添加的词条。</p>
+    </section>
+    <section id="detail-view" hidden aria-label="题库详情">
+      <a class="back-link" href="#/">← 返回全部题库</a>
+      <div id="detail-heading" class="detail-heading"></div>
+      <div class="detail-layout" id="detail-content" hidden>
+        <section class="words-panel" aria-labelledby="words-title">
+          <div class="section-heading words-heading"><h2 id="words-title">全部词条 <span class="count" id="word-count">0</span></h2></div>
+          <label class="search-field word-search"><span class="sr-only">搜索词条</span><input id="word-search" type="search" placeholder="搜索词条" autocomplete="off"></label>
+          <p id="word-results-summary" class="summary" aria-live="polite"></p>
+          <div class="words-grid" id="words-grid" aria-live="polite"></div>
+          <nav id="pagination" class="pagination" aria-label="词条分页" hidden></nav>
+        </section>
+        <aside class="add-panel" aria-labelledby="add-title">
+          <h2 id="add-title">添加词条</h2>
+          <form id="add-words-form">
+            <label class="field-label" for="words-input">词条（一行一个）</label>
+            <textarea id="words-input" rows="7" placeholder="西瓜&#10;放风筝&#10;画蛇添足" required aria-describedby="words-help words-input-count" maxlength="11000"></textarea>
+            <div class="textarea-meta"><span id="words-help">每条最多 50 字，每次最多 200 条</span><span id="words-input-count">0 条</span></div>
+            <label class="field-label" for="contributor">署名（选填）</label><input id="contributor" class="text-input" maxlength="24" placeholder="你的名字" autocomplete="nickname">
+            <div id="add-feedback" class="form-feedback" role="status" hidden></div>
+            <div id="similar-results" class="similar-results" hidden></div>
+            <div class="add-actions"><button class="button" type="button" id="check-similar">查重</button><button class="button button-primary" type="submit" id="add-submit">提交</button></div>
+          </form>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <dialog id="create-dialog" class="create-dialog" aria-labelledby="create-title">
+    <h2 id="create-title">新建题库</h2>
+    <form id="create-form">
+      <label class="field-label" for="library-name">题库名称</label><input id="library-name" class="text-input" required maxlength="40" autocomplete="off">
+      <label class="field-label" for="library-description">简介（选填）</label><textarea id="library-description" rows="3" maxlength="160"></textarea>
+      <p class="help-text">创建后，所有人都可以查看和添加词条。</p>
+      <div id="create-feedback" class="form-feedback error" role="alert" hidden></div>
+      <div class="dialog-actions"><button type="button" class="button" id="close-create">取消</button><button type="submit" class="button button-primary" id="create-submit">创建题库</button></div>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" class="create-dialog" aria-labelledby="delete-title">
+    <h2 id="delete-title">删除词条</h2>
+    <p class="help-text" id="delete-message">删除后无法恢复。</p>
+    <div class="dialog-actions"><button type="button" class="button" id="close-delete">取消</button><button type="button" class="button button-danger" id="confirm-delete">删除</button></div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

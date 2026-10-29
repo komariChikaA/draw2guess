@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#b87842">
+  <meta name="description" content="4–16 人多人绘画接龙：选词作画，下一位看图猜词，再交给下一位作画，最后逐棒回放。默认全屏画板，支持断线暂停与恢复。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>画猜接龙 · 多人绘画传话游戏</title>
+  <link rel="stylesheet" href="/game.css">
+  <script src="/game-sound.js" defer></script>
+  <script src="/game-recovery.js" defer></script>
+  <script src="/game.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/game" aria-label="画猜接龙首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 44 44"><rect x="2" y="2" width="40" height="40" rx="12" fill="#324ba9" stroke="#14132a" stroke-width="2.6"/><path d="M12 14h16a5 5 0 0 1 5 5v5a5 5 0 0 1-5 5h-7l-6 5v-5h-3a5 5 0 0 1-5-5v-5a5 5 0 0 1 5-5Z" fill="#fff9f3" stroke="#14132a" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 21h13M16 26h7" stroke="#324ba9" stroke-width="2.6" stroke-linecap="round"/><path d="m29 9 7 7-8 4-3-3Z" fill="#ffe75d" stroke="#14132a" stroke-width="2.2" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-copy"><strong>画猜接龙</strong><small>DRAW · GUESS · RELAY</small></span>
+      </a>
+      <nav class="header-links" aria-label="页面导航"><a href="/" class="library-link">题库 <span aria-hidden="true">↗</span></a><a href="/library" class="library-link">作品库 <span aria-hidden="true">↗</span></a><div id="account-area" class="account-area"><button id="account-button" class="button button-small button-cream" type="button">登录 / 注册</button><span id="account-name" class="account-name" hidden></span><button id="logout-button" class="text-button" type="button" hidden>退出</button></div><button id="leave-button" type="button" class="button button-small button-cream" hidden>离开房间</button></nav>
+    </header>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <div id="leave-confirm" class="inline-confirm top-confirm" hidden><span>确定离开本局？当前席位会交给服务器处理。</span><button id="confirm-leave" class="button button-small button-danger" type="button">确定离开</button><button id="cancel-leave" class="button button-small button-cream" type="button">留在房间</button></div>
+
+    <main id="home-view" class="home-view">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="eyebrow"><span class="little-dot"></span> 4–16 人在线 · 同时作画</div>
+        <h1 id="hero-title">画猜接龙</h1>
+        <p class="hero-lead">一句话，画成一幅画；<br class="mobile-break">一幅画，再猜成一句话。</p>
+        <p class="hero-description">每一棒只看到上一位的内容。<br>画画与猜词交替传递，最后一起回放，<br>看看最初的题目变成了什么。</p>
+        <div class="hero-art" role="img" aria-label="游戏画面预览">
+          <figure class="cover-card cover-day"><img src="/game-assets/game-scene-day.webp" alt="游戏画面预览一" loading="eager" decoding="async"></figure>
+          <figure class="cover-card cover-night"><img src="/game-assets/game-scene-night.webp" alt="游戏画面预览二" loading="lazy" decoding="async"></figure>
+          <span class="cover-tag tag-draw">DRAW</span>
+          <span class="cover-tag tag-guess">GUESS</span>
+          <span class="cover-tag tag-relay">RELAY</span>
+        </div>
+        <div class="hero-tags"><span>注册账号</span><span>跨设备续玩</span><span>4–16 人</span></div>
+      </section>
+      <section class="card entry-card" aria-labelledby="entry-title">
+        <div class="card-kicker">准备开始</div>
+        <h2 id="entry-title">加入本局</h2>
+        <form id="identity-form" autocomplete="on">
+          <label class="field-label" for="player-name">昵称</label>
+          <input id="player-name" name="nickname" class="text-input" maxlength="20" placeholder="输入你的昵称" autocomplete="nickname" required>
+          <fieldset class="avatar-field"><legend class="field-label">默认头像</legend><div id="avatar-picker" class="avatar-picker" role="group" aria-label="选择默认头像"></div></fieldset>
+          <button id="create-button" class="button button-primary button-full" type="submit">创建房间</button>
+        </form>
+        <div class="divider"><span>或使用房间码加入</span></div>
+        <form id="join-form" class="join-form"><label class="sr-only" for="room-code">六位房间码</label><input id="room-code" class="text-input code-input" maxlength="6" minlength="6" placeholder="6 位房间码" autocapitalize="characters" autocomplete="off" spellcheck="false" required pattern="[A-Za-z0-9]{6}"><button id="join-button" class="button button-cream" type="submit">加入</button></form>
+        <button id="practice-button" class="button button-lilac button-full" type="button">单人试玩 <span class="button-note">3 位演示玩家</span></button>
+        <p class="entry-footnote">演示玩家会自动完成作画与猜词，便于熟悉流程。</p>
+        <button id="resume-button" class="button button-cream button-full" type="button" hidden>继续上次的房间</button>
+        <p class="entry-footnote">登录后进入房间；Cookie 会自动保持登录，更换设备也能回到原席位。</p>
+      </section>
+      <details class="card tutorial"><summary>玩法说明 <span aria-hidden="true">⌄</span></summary><div class="tutorial-steps"><div><b>01 · 选择题目，开始作画</b><p>从三个词中选择一个。其他玩家也在同时创作，每人都有一条独立接龙。</p></div><div><b>02 · 看图猜词，再传给下一位</b><p>每一棒只显示上一棒的内容。画画与猜词交替进行，直到传完所有玩家。</p></div><div><b>03 · 全员完成后逐棒回放</b><p>一起看每条接龙如何变化，并投票判断它是否还接近最初的题目。</p></div></div><p class="tutorial-note">界面与图标为本站原创；默认头像来自 <a href="https://www.irasutoya.com/" target="_blank" rel="noopener noreferrer">いらすとや</a>；游戏画面素材已获授权使用。</p></details>
+    </main>
+
+    <main id="room-view" class="room-view" hidden>
+      <section class="card room-band" aria-label="房间状态">
+        <div class="room-info"><span class="card-kicker">房间 <strong id="room-code-label">——</strong></span><button id="share-button" type="button" class="text-button" title="复制邀请链接">复制邀请链接</button></div>
+        <div class="round-info"><h1 id="phase-title">等待玩家</h1><p id="phase-description">玩家到齐并准备后即可开始</p></div>
+        <div class="band-status"><span id="connection-status" class="connection"><span class="connection-dot"></span><span id="connection-text">正在连接</span></span></div>
+      </section>
+      <div class="notebook-tabs" role="tablist" aria-label="房间页切换"><button class="notebook-tab active" data-room-tab="room" type="button" role="tab" aria-selected="true">房间</button><button class="notebook-tab" data-room-tab="tea" type="button" role="tab" aria-selected="false">茶绘</button></div>
+      <div id="reconnect-panel" class="inline-confirm" role="status" hidden><span id="reconnect-message">连接中断，正在自动重连。你的草稿会保存在本机。</span><button id="reconnect-button" class="button button-small button-cream" type="button">立即重连</button></div>
+      <div id="share-panel" class="inline-confirm" hidden><label for="invite-link">邀请链接</label><input id="invite-link" class="text-input" readonly><button id="close-share" class="button button-small button-cream" type="button">收起</button></div>
+      <div class="game-layout">
+        <aside class="card players-card" aria-labelledby="players-title"><div class="panel-heading"><h2 id="players-title">玩家 <span id="player-count" class="count-pill">0/8</span></h2><span id="progress-label" class="small-muted">准备中</span></div><div id="player-list" class="player-list"></div><div class="players-foot"><span class="little-dot"></span><span id="players-foot-text">至少 4 人即可开始</span></div></aside>
+        <section id="stage" class="stage" aria-label="游戏主区域">
+          <div id="lobby-panel" class="card lobby-panel">
+            <span class="eyebrow">房间已创建</span><h2>等待玩家加入</h2><p id="lobby-intro">邀请朋友，或先与演示玩家试玩。</p>
+            <details class="settings-details"><summary><span>房间设置</span><span id="settings-summary" class="small-muted"></span></summary>
+            <form id="settings-form" class="settings-grid"><div><label class="field-label" for="setting-max">人数上限</label><select id="setting-max" class="text-input" name="max_players"><option value="4">4 人</option><option value="6">6 人</option><option value="8" selected>8 人</option><option value="10">10 人</option><option value="12">12 人</option><option value="16">16 人</option></select></div><div><label class="field-label" for="setting-draw">绘画时间</label><select id="setting-draw" class="text-input" name="draw_seconds"><option value="30">30 秒</option><option value="60">60 秒</option><option value="90">90 秒</option><option value="120">120 秒</option><option value="180" selected>180 秒</option><option value="300">300 秒</option></select></div><div><label class="field-label" for="setting-guess">猜词时间</label><select id="setting-guess" class="text-input" name="guess_seconds"><option value="15">15 秒</option><option value="30">30 秒</option><option value="45">45 秒</option><option value="60" selected>60 秒</option><option value="90">90 秒</option><option value="120">120 秒</option></select></div><div><label class="field-label" for="setting-library">题目来源</label><select id="setting-library" class="text-input" name="library_id"><option value="">请选择题库</option></select></div><div class="settings-footer"><span id="settings-hint" class="small-muted">只有房主可以调整设置</span><button id="settings-save" class="button button-small button-cream" type="submit">保存设置</button></div></form>
+            </details>
+            <div class="lobby-actions"><button id="ready-button" class="button button-lilac" type="button">我准备好了</button></div><p id="start-hint" class="small-muted">至少 4 人，所有人准备后自动倒计时开始</p>
+          </div>
+
+          <div id="workspace" class="workspace" hidden>
+            <div class="board-top">
+              <div class="board-identity"><span id="board-avatar" class="board-avatar"></span><div class="board-identity-text"><strong id="board-name">玩家</strong><span id="task-kicker">第 1 棒 · 绘画</span></div></div>
+              <div class="pass-strip" aria-label="接龙传递"><div id="pass-from" class="pass-player" hidden></div><span class="pass-arrow" aria-hidden="true">→</span><div id="pass-me" class="pass-player pass-me" hidden></div><span class="pass-arrow" aria-hidden="true">→</span><div id="pass-to" class="pass-player" hidden></div></div>
+              <div class="board-right"><div id="phase-sequence" class="phase-sequence" aria-label="本局剩余步骤"></div><div id="board-players" class="board-players" aria-label="玩家进度"></div><button id="sound-toggle" class="sound-toggle" type="button" aria-label="关闭提示音" aria-pressed="true" title="关闭提示音">音</button><button id="audio-settings-button" class="sound-toggle" type="button" aria-label="音量设置" title="音量设置">音量</button><span id="task-state" class="task-state">进行中</span><div id="timer" class="timer" role="timer" aria-label="本轮剩余时间" hidden><span aria-hidden="true">◷</span><strong id="timer-value">00:00</strong></div><button class="board-leave" type="button" data-leave>离开</button></div>
+            </div>
+            <div id="prompt-popover" class="prompt-popover" hidden>
+              <button id="prompt-toggle" class="prompt-toggle" type="button" aria-expanded="false" aria-controls="choice-panel"><span class="prompt-eyebrow">上一位传来的题目</span><strong id="prompt-preview">选择一个题目</strong><span class="prompt-caret" aria-hidden="true">⌃</span></button>
+              <div id="choice-panel" class="prompt-body" hidden>
+                <p id="choice-help">从三个词中选择一个，其他玩家看不到你的选择。</p>
+                <p id="choice-timer" class="choice-timer" hidden></p>
+                <div id="word-choices" class="word-choices" role="group" aria-label="选择本局的绘画题目"></div>
+                <strong id="task-title" class="prompt-full">选择一个题目</strong>
+              </div>
+            </div>
+
+            <div id="draw-workspace" class="board-stage" hidden>
+              <div class="canvas-frame"><div class="paper-sheet"><canvas id="draw-canvas" width="960" height="640" tabindex="0" aria-label="绘画画布，逻辑尺寸 960 乘 640。画笔 B，橡皮 E，填充 F，撤销 Ctrl Z。"></canvas></div></div>
+              <div id="source-chip" class="source-chip" hidden></div>
+              <div class="board-bottom"><span id="draft-status" class="board-status" role="status">落笔后自动保存</span><span class="board-hint">B 画笔 · E 橡皮 · F 填充 · Ctrl Z 撤销</span><button id="submit-draw" class="button button-primary board-submit" type="button">提交画作</button></div>
+              <aside id="tool-drawer" class="tool-drawer collapsed" aria-label="绘画工具">
+                <div class="tool-rail" role="group" aria-label="工具">
+                  <button class="rail-button selected" data-tool="pen" type="button" title="画笔（B）" aria-label="画笔（B）" aria-pressed="true">✎<span>画笔</span></button>
+                  <button class="rail-button" data-tool="eraser" type="button" title="普通橡皮（E）" aria-label="普通橡皮（E）" aria-pressed="false">▱<span>橡皮</span></button>
+                  <button class="rail-button" data-tool="line-eraser" type="button" title="线条橡皮：点一下删除整笔" aria-label="线条橡皮" aria-pressed="false">╱<span>线擦</span></button>
+                  <button class="rail-button" data-tool="fill" type="button" title="填充（F）" aria-label="填充（F）" aria-pressed="false">◒<span>填充</span></button>
+                  <button id="undo-button" class="rail-button" type="button" title="撤销（Ctrl Z）" aria-label="撤销">↶<span>撤销</span></button>
+                </div>
+                <button id="color-popover-toggle" class="rail-popover-toggle" type="button" aria-expanded="false" title="打开选色面板"><span id="current-color-dot" class="current-color-dot"></span><span>选色</span></button>
+                <button id="layer-popover-toggle" class="rail-popover-toggle" type="button" aria-expanded="false" title="打开图层面板"><span id="current-layer-label">图层 3</span></button>
+              </aside>
+              <div id="brush-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>画笔</strong><button id="brush-popover-close" class="panel-close" type="button" aria-label="关闭画笔设置">×</button></div>
+                <div class="size-group"><label for="brush-size">粗细 <output id="brush-size-value" for="brush-size">6</output></label><input id="brush-size" type="range" min="1" max="64" value="6" aria-label="画笔粗细，1 到 64"><div class="size-presets" role="group" aria-label="常用笔宽"><button type="button" data-size="3" class="size-button" title="细笔 3" aria-label="细笔 3">·</button><button type="button" data-size="6" class="size-button selected" title="中笔 6" aria-label="中笔 6">•</button><button type="button" data-size="16" class="size-button" title="粗笔 16" aria-label="粗笔 16">●</button><button type="button" data-size="32" class="size-button" title="大笔 32" aria-label="大笔 32">⬤</button></div></div>
+                <div class="opacity-row"><label for="opacity-range">不透明度 <output id="opacity-value">100</output>%</label><input id="opacity-range" type="range" min="10" max="100" step="1" value="100"></div>
+                <label class="pressure-row"><input id="pressure-toggle" type="checkbox" checked><span><strong>压感粗细</strong><small>数位板或触控笔生效</small></span></label>
+                <div class="brush-section"><span class="field-label">笔触</span><div id="brush-strip" class="brush-strip" role="group" aria-label="画笔笔触"><button type="button" class="brush-button selected" data-brush="pen">标准</button><button type="button" class="brush-button" data-brush="marker">马克</button><button type="button" class="brush-button" data-brush="pencil">铅笔</button><button type="button" class="brush-button" data-brush="brush">毛笔</button><button type="button" class="brush-button" data-brush="crayon">蜡笔</button><button type="button" class="brush-button" data-brush="spray">喷枪</button></div></div>
+                <div class="tool-panel-actions"><button id="redo-button" class="button button-small button-cream" type="button">重做</button><button id="clear-button" class="button button-small button-cream" type="button">清空本层</button><button id="export-button" class="button button-small button-cream" type="button">下载 PNG</button></div>
+                <div id="clear-confirm" class="inline-confirm" hidden><span>清空当前图层？清空后仍可撤销。</span><button id="confirm-clear" class="button button-small button-danger" type="button">清空</button><button id="cancel-clear" class="button button-small button-cream" type="button">取消</button></div>
+              </div>
+              <div id="eraser-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>普通橡皮</strong><button id="eraser-popover-close" class="panel-close" type="button" aria-label="关闭普通橡皮设置">×</button></div>
+                <div class="size-group"><label for="eraser-size">橡皮大小 <output id="eraser-size-value">20</output></label><input id="eraser-size" type="range" min="1" max="80" value="20"></div>
+                <p class="small-muted">拖动擦除像素，不改变其他笔画。</p>
+              </div>
+              <div id="line-eraser-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>线条橡皮</strong><button id="line-eraser-popover-close" class="panel-close" type="button" aria-label="关闭线条橡皮设置">×</button></div>
+                <div class="size-group"><label for="line-eraser-size">擦除范围 <output id="line-eraser-size-value">12</output></label><input id="line-eraser-size" type="range" min="4" max="80" value="12"></div>
+                <p class="small-muted">点击或拖动经过的整笔会删除，可撤销。</p>
+              </div>
+              <div id="fill-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>填充</strong><button id="fill-popover-close" class="panel-close" type="button" aria-label="关闭填充设置">×</button></div>
+                <div class="angle-dial-wrap"><span class="field-label">渐变角度 <strong id="fill-angle-value">0</strong>°</span><div id="fill-dial" class="angle-dial" role="slider" tabindex="0" aria-label="渐变角度" aria-valuemin="0" aria-valuemax="360" aria-valuenow="0"><span class="angle-dial-ring"></span><span id="fill-dial-hand" class="angle-dial-hand"><span class="angle-dial-knob"></span></span></div></div>
+                <input id="fill-angle" type="hidden" value="0">
+                <p class="small-muted">拖动圆盘选择渐变方向；在“选色”中开启渐变后生效，关闭渐变则使用当前颜色。</p>
+                <button id="fill-open-color" class="button button-small button-cream" type="button">打开选色</button>
+              </div>
+              <div id="color-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>选色</strong><button id="color-popover-close" class="panel-close" type="button" aria-label="关闭选色">×</button></div>
+                <div id="color-palette" class="color-palette" role="group" aria-label="颜色选择"></div>
+                <label class="custom-color" title="选择更多颜色"><input id="custom-color" type="color" value="#293047" aria-label="自定义画笔颜色"><span>更多颜色</span></label>
+                <div class="gradient-row"><span class="field-label">渐变颜色</span><div class="gradient-controls"><input id="gradient-a" type="color" value="#ff6b6b" aria-label="渐变起始色"><input id="gradient-b" type="color" value="#4d7cff" aria-label="渐变结束色"><button id="gradient-toggle" class="button button-small button-cream" type="button" aria-pressed="false">启用渐变</button></div></div>
+              </div>
+              <div id="layer-popover" class="tool-popover" hidden>
+                <div class="tool-popover-head"><strong>图层</strong><button id="layer-popover-close" class="panel-close" type="button" aria-label="关闭图层">×</button></div>
+                <div class="layer-head"><span class="field-label">3 个图层</span><span class="small-muted">眼睛仅切换预览</span></div>
+                <div id="layer-list" class="layer-list"></div>
+              </div>
+            </div>
+
+            <div id="guess-workspace" class="board-stage guess-stage" hidden>
+              <div class="canvas-frame"><div class="paper-sheet"><canvas id="source-canvas" width="960" height="640" aria-label="上一位玩家的画作"></canvas><div id="source-empty" class="source-empty" hidden>上一位没有留下画作，请直接写下猜测。</div></div></div>
+              <form id="guess-form" class="board-answer"><label class="field-label" for="guess-input">你看到的画是什么？</label><div class="answer-row"><input id="guess-input" class="text-input" maxlength="120" placeholder="输入答案，按 Enter 提交" autocomplete="off" enterkeyhint="send" required><button id="submit-guess" class="button button-primary" type="submit">提交</button></div><p id="guess-draft-status" class="small-muted" role="status">输入内容会自动保存，按 Enter 提交给下一位。</p></form>
+            </div>
+
+            <div id="waiting-panel" class="board-waiting" hidden><div class="waiting-sheet"><span class="waiting-icon" aria-hidden="true">⌛</span><div class="waiting-copy"><h3>等待其他玩家</h3><p id="waiting-text">等待其他玩家完成本棒。</p></div><span id="waiting-progress" class="count-pill">0 / 0</span><div id="waiting-players" class="waiting-players"></div></div></div>
+          </div>
+
+          <div id="reveal-panel" class="reveal-panel" hidden>
+            <div class="reveal-top"><div class="reveal-title"><span id="reveal-stage-label" class="eyebrow">过程回放</span><h2 id="reveal-heading">正在播放接龙</h2><p id="reveal-position" class="small-muted"></p></div><div id="reveal-players" class="board-players reveal-players" aria-label="接龙进度"></div><div class="reveal-top-actions"><div id="reveal-sequence" class="phase-sequence" aria-label="本链接龙步骤"></div><button id="reveal-leave" class="button button-small button-cream" type="button" data-leave>离开</button><button id="replay-button" class="button button-small button-primary" type="button" hidden>再来一局</button></div></div>
+            <section id="lineup-panel" class="lineup-panel" hidden><div class="lineup-paper"><span class="eyebrow">接龙队列</span><div id="lineup-players" class="lineup-players"></div><p id="lineup-status" class="stage-status"></p></div></section>
+            <section id="replay-panel" class="replay-panel"><div class="replay-card"><div id="replay-media" class="replay-media"></div><div class="replay-meta"><span id="replay-step-label" class="count-pill">0 / 0</span><strong id="replay-caption"></strong></div></div><div class="replay-progress"><div id="replay-dots" class="replay-dots"></div><span id="replay-status" class="small-muted">自动播放中</span></div></section>
+            <section id="match-panel" class="match-panel" hidden><div class="match-paper"><span class="eyebrow">这个匹配吗？</span><div class="match-line"><strong id="match-prompt"></strong><span class="match-arrow" aria-hidden="true">→</span><strong id="match-final"></strong></div><div class="match-actions"><button id="match-yes" class="button match-yes" type="button" aria-pressed="false">✓</button><button id="match-no" class="button match-no" type="button" aria-pressed="false">✗</button></div><p id="match-counts" class="small-muted"></p><div id="match-marks" class="match-marks" aria-hidden="true"></div><p id="match-result" class="match-result" hidden></p><p id="match-status" class="stage-status"></p></div><div id="match-voters" class="match-voters"></div></section>
+            <section id="favorite-panel" class="favorite-panel" hidden><div class="favorite-paper"><div class="favorites-head"><span class="eyebrow">题主评选</span><h2 id="favorite-title">选出本链最佳画作</h2><p id="favorite-hint" class="small-muted"></p></div><div id="favorite-grid" class="favorite-grid"></div><p id="favorite-result" class="favorite-result"></p><p id="favorite-status" class="stage-status"></p></div></section>
+            <section id="score-panel" class="score-panel" hidden><div class="score-paper"><div class="scores-head"><span class="eyebrow">最终得分</span><h2>本局积分</h2><p id="score-summary" class="small-muted"></p></div><div id="score-list" class="score-list"></div><div class="scores-foot"><button id="scores-replay" class="button button-primary" type="button">回到房间</button></div></div></section>
+          </div>
+        </section>
+        <aside class="card chat-card" aria-labelledby="chat-title"><div class="panel-heading"><h2 id="chat-title">房间聊天</h2><span class="chat-mark" aria-hidden="true">···</span></div><p class="chat-hint">准备阶段可以讨论，开始作画后聊天会收起。</p><div id="chat-messages" class="chat-messages" role="log" aria-label="聊天消息" aria-live="polite" aria-relevant="additions"></div><button id="chat-new" class="text-button chat-new" type="button" hidden>有新消息，查看 ↓</button><form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">发送聊天消息</label><input id="chat-input" class="text-input" maxlength="200" placeholder="发送消息…" autocomplete="off" required><button id="chat-send" class="button button-primary button-small" type="submit" aria-label="发送消息">↑</button></form></aside>
+      </div>
+
+      <section id="tea-view" class="tea-view" hidden>
+        <div class="tea-top"><div><span class="eyebrow">茶绘</span><h1>房间 <span id="tea-code">——</span> 的茶绘</h1><p>所有人同时画；只能撤销、清空或擦除自己的线条。</p></div><div id="tea-player-toggles" class="tea-player-toggles" aria-label="隐藏玩家线条"></div><div class="tea-actions"><button id="tea-save" class="button button-primary" type="button">收藏到画廊</button><button id="tea-undo" class="button button-cream" type="button">撤销我的上一笔</button><button id="tea-clear" class="button button-cream" type="button">清空我的线条</button></div></div>
+        <div class="tea-body">
+          <div class="tea-paper"><canvas id="tea-canvas" width="960" height="640" aria-label="茶绘画布"></canvas></div>
+          <aside class="tea-tools">
+            <div class="tea-tool-row"><button class="tea-tool active" data-tea-tool="pen" type="button">画笔</button><button class="tea-tool" data-tea-tool="line-eraser" type="button">线条橡皮</button></div>
+            <label class="field-label" for="tea-size">粗细 <output id="tea-size-value">6</output></label><input id="tea-size" type="range" min="1" max="64" value="6">
+            <label class="field-label" for="tea-opacity">不透明度 <output id="tea-opacity-value">100</output>%</label><input id="tea-opacity" type="range" min="10" max="100" value="100">
+            <span class="field-label">颜色</span><div id="tea-colors" class="tea-colors"></div>
+            <span class="field-label">笔触</span><div id="tea-brushes" class="tea-brushes"></div><span class="field-label">渐变</span><div class="tea-gradient"><input id="tea-gradient-a" type="color" value="#ff6b6b"><input id="tea-gradient-b" type="color" value="#4d7cff"><button id="tea-gradient-toggle" type="button" aria-pressed="false">启用渐变</button></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">画猜接龙 <span aria-hidden="true">·</span><span>看看每幅画被理解成了什么</span></footer>
+  </div>
+  <dialog id="pause-dialog" class="reconnect-dialog" aria-labelledby="pause-title"><h2 id="pause-title">有玩家掉线，本局暂停</h2><p id="pause-player-names"></p><p>剩余等待：<strong id="pause-seconds">40</strong> 秒</p><p class="small-muted">重连后计时继续。若未返回，该席位会被跳过，最后一份有效内容继续传给下一位。</p><div id="pause-host-actions" class="pause-actions"><button id="pause-extend" type="button" class="button button-lilac">延长 40 秒</button><button id="pause-cancel" type="button" class="button button-primary">结束等待，继续游戏</button></div><button id="pause-dismiss" type="button" class="button button-cream">收起提示</button></dialog>
+  <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-title"><h2 id="auth-title">登录或注册</h2><p class="auth-lead">进入房间需要账号。登录后可在其他设备继续上次的房间；Cookie 会自动保持登录。</p><form id="auth-form"><label class="field-label" for="auth-username">账号</label><input id="auth-username" class="text-input" maxlength="24" minlength="3" autocomplete="username" placeholder="3～24 位中文、字母或数字" required><label class="field-label" for="auth-password">密码</label><input id="auth-password" class="text-input" type="password" maxlength="72" minlength="6" autocomplete="current-password" placeholder="至少 6 位" required><p id="auth-feedback" class="form-feedback error" role="alert" hidden></p><p class="auth-note">首次使用请点“注册新账号”；已有账号直接登录。</p><div class="auth-actions"><button id="auth-close" class="button button-cream" type="button">取消</button><button id="auth-login" class="button button-primary" type="submit">登录</button><button id="auth-register" class="button button-lilac" type="button">注册新账号</button></div></form></dialog>
+  <div id="flow-overlay" class="flow-overlay" hidden><div class="flow-paper"><div id="flow-icon" class="flow-icon" aria-hidden="true">⌛</div><h2 id="flow-title">请稍候</h2><p id="flow-text"></p><div id="flow-choices" class="flow-choices" hidden></div><strong id="flow-count" class="flow-count" hidden></strong><div id="flow-players" class="flow-players" hidden></div></div></div>
+  <dialog id="audio-settings" class="audio-settings" aria-labelledby="audio-settings-title"><h2 id="audio-settings-title">声音设置</h2><label class="field-label" for="bgm-volume">背景音乐 <output id="bgm-volume-value">35</output>%</label><input id="bgm-volume" type="range" min="0" max="100" step="1" value="35"><label class="field-label" for="sfx-volume">音效 <output id="sfx-volume-value">70</output>%</label><input id="sfx-volume" type="range" min="0" max="100" step="1" value="70"><span class="field-label">背景音乐歌单</span><div id="bgm-track-list" class="bgm-track-list"></div><div class="dialog-actions"><button id="audio-settings-close" class="button button-primary" type="button">完成</button></div></dialog>
+  <dialog id="submit-confirm" class="submit-confirm" aria-labelledby="submit-confirm-title"><h2 id="submit-confirm-title">提交这幅画？</h2><p>提交后本棒不能修改，会直接交给下一位。</p><div class="dialog-actions"><button id="submit-cancel" class="button button-cream" type="button">继续画</button><button id="submit-ok" class="button button-primary" type="button">确认提交</button></div></dialog>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
